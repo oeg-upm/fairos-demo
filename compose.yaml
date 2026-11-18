@@ -1,0 +1,9 @@
+services:
+  fairos-web:
+    build: .
+    image: fairos-web:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-https://prefairos.linkeddata.es}

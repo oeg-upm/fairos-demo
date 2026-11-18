@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FAIROs — FDO Assessment</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brandmark">F</div>
+      <div><strong>FAIROs</strong><span>FDO Assessment Service</span></div>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-view="assess">New assessment</button>
+      <button class="nav-btn" data-view="jobs">Jobs</button>
+      <button class="nav-btn" data-view="about">About</button>
+    </nav>
+    <button id="settingsBtn" class="icon-btn" title="API settings">⚙</button>
+  </header>
+
+  <main>
+    <section id="assessView" class="view active">
+      <div class="hero">
+        <p class="eyebrow">FAIR DIGITAL OBJECTS</p>
+        <h1>Assess the FAIRness of a Research Object</h1>
+        <p>Upload a Research Object metadata file, specify the assessment algorithm, and follow the asynchronous job until the score is ready.</p>
+      </div>
+
+      <div class="card form-card">
+        <label>Research Object metadata</label>
+        <div class="source-tabs" role="tablist" aria-label="Assessment input">
+          <button type="button" class="source-tab active" data-source="file">Upload file</button>
+          <button type="button" class="source-tab" data-source="url">Use URL</button>
+        </div>
+
+        <div id="fileSource" class="source-panel active">
+          <input id="roFile" type="file" accept=".json,.jsonld,application/json,application/ld+json" />
+          <small>Upload the <code>ro-crate-metadata.json</code> file to assess.</small>
+        </div>
+
+        <div id="urlSource" class="source-panel">
+          <input id="roUrl" type="url" placeholder="https://example.org/ro-crate-metadata.json" />
+          <small>Enter a URL that resolves to the Research Object metadata file.</small>
+        </div>
+
+        <label for="algorithm">Assessment algorithm identifier</label>
+        <input id="algorithm" type="text" value="FAIROS" placeholder="Algorithm identifier" />
+        <small>FAIROS is used as the default assessment algorithm.</small>
+
+        <div class="actions">
+          <button id="startAssessment" class="primary">Start assessment</button>
+        </div>
+      </div>
+
+      <div id="runningCard" class="card running hidden">
+        <div class="spinner"></div>
+        <div>
+          <h2>Assessment running</h2>
+          <p id="runningText">The job has been submitted.</p>
+          <div class="job-meta"><span>Ticket</span><code id="ticketText"></code></div>
+        </div>
+        <button id="cancelPolling" class="secondary">Stop checking</button>
+      </div>
+
+      <div id="errorBox" class="error hidden"></div>
+    </section>
+
+    <section id="jobsView" class="view">
+      <div class="page-head">
+        <div><p class="eyebrow">LOCAL HISTORY</p><h1>Assessment jobs</h1></div>
+        <button id="clearJobs" class="secondary">Clear history</button>
+      </div>
+      <div id="jobsList" class="jobs-list"></div>
+    </section>
+
+    <section id="resultView" class="view">
+      <button id="backToJobs" class="back">← Back</button>
+      <div id="resultHeader"></div>
+      <div id="summaryCards" class="summary-grid"></div>
+      <div class="card">
+        <div class="section-title">
+          <div><p class="eyebrow">ASSESSMENT DETAILS</p><h2>Test results</h2></div>
+          <div class="filters">
+            <input id="testSearch" placeholder="Search tests…" />
+            <select id="statusFilter"><option value="">All statuses</option><option>PASS</option><option>FAIL</option><option>ERROR</option><option>INDETERMINATED</option><option>NOT_APPLICABLE</option></select>
+          </div>
+        </div>
+        <div id="tests"></div>
+      </div>
+      <details class="card raw">
+        <summary>Raw JSON-LD result</summary>
+        <div class="raw-actions"><button id="downloadJson" class="secondary">Download JSON-LD</button></div>
+        <pre id="rawJson"></pre>
+      </details>
+    </section>
+
+    <section id="aboutView" class="view">
+      <div class="hero compact"><p class="eyebrow">ABOUT</p><h1>FAIROs</h1>
+        <p>FAIROs evaluates FAIRness of Research Objects and exposes assessment results using the FAIR Testing Resource (FTR) model.</p>
+      </div>
+      <div class="card prose">
+        <h2>About FAIROs</h2>
+        <p>FAIROs is a FAIR assessment service designed to evaluate Research Objects and FAIR Digital Objects. It applies a configurable set of FAIR tests and combines their results using an assessment algorithm to produce an overall score. The service can assess the Research Object together with its constituent resources and represents the resulting assessment in a machine-actionable form.</p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="settings">
+      <div class="section-title"><h2>API settings</h2><button value="cancel" class="icon-btn">✕</button></div>
+      <label>API base URL<input id="apiBase" placeholder="http://localhost:8000" /></label>
+      <label>Bearer token (optional)<input id="apiToken" type="password" placeholder="Token" /></label>
+      <label>Start assessment path template<input id="startPath" /><small>Use <code>{algorithm}</code> as placeholder.</small></label>
+      <label>Score path template<input id="resultPath" /><small>Use <code>{ticket}</code> as placeholder.</small></label>
+      <label>Polling interval (seconds)<input id="pollSeconds" type="number" min="2" max="60" /></label>
+      <div class="actions"><button id="saveSettings" value="default" class="primary">Save</button></div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
