@@ -1,7 +1,5 @@
-const DEFAULTS={apiBase:"http://localhost:8000",startPath:"/assess/algorithm/{algorithm}",resultPath:"/assess/score/{ticket}",pollSeconds:5,token:""};
+const DEFAULTS={apiBase:"http://prefairos.linkeddata.es",startPath:"/assess/algorithm/{algorithm}",resultPath:"/assess/score/{ticket}",pollSeconds:5,token:""};
 let cfg={...DEFAULTS,...JSON.parse(localStorage.getItem("fairos-config")||"{}")};
-// Docker runtime configuration takes precedence over saved browser settings.
-if (window.APP_CONFIG?.API_BASE_URL) cfg.apiBase=window.APP_CONFIG.API_BASE_URL;
 let timer=null,currentResult=null,currentResourceMetadata={};
 
 const $=s=>document.querySelector(s);
