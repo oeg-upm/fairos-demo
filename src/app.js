@@ -1,4 +1,4 @@
-const DEFAULTS={apiBase:"http://prefairos.linkeddata.es",startPath:"/assess/algorithm/{algorithm}",resultPath:"/assess/score/{ticket}",pollSeconds:5,token:""};
+const DEFAULTS={apiBase:"https://prefairos.linkeddata.es",startPath:"/assess/algorithm/{algorithm}",resultPath:"/assess/score/{ticket}",pollSeconds:5,token:""};
 let cfg={...DEFAULTS,...JSON.parse(localStorage.getItem("fairos-config")||"{}")};
 let timer=null,currentResult=null,currentResourceMetadata={};
 
