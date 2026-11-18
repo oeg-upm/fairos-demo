@@ -110,7 +110,7 @@
   <dialog id="settingsDialog">
     <form method="dialog" class="settings">
       <div class="section-title"><h2>API settings</h2><button value="cancel" class="icon-btn">✕</button></div>
-      <label>API base URL<input id="apiBase" placeholder="http://localhost:8000" /></label>
+      <label>API base URL<input id="apiBase" placeholder="http://prefairos.linkeddata.es" /></label>
       <label>Bearer token (optional)<input id="apiToken" type="password" placeholder="Token" /></label>
       <label>Start assessment path template<input id="startPath" /><small>Use <code>{algorithm}</code> as placeholder.</small></label>
       <label>Score path template<input id="resultPath" /><small>Use <code>{ticket}</code> as placeholder.</small></label>
@@ -119,7 +119,6 @@
     </form>
   </dialog>
 
-  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
