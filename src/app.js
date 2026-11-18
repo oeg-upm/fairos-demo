@@ -111,9 +111,9 @@ function poll(ticket,resource,algo,location=null){
   clearInterval(timer);$("#runningCard").classList.remove("hidden");$("#ticketText").textContent=ticket;$("#runningText").textContent="Waiting for the assessment result…";
   const check=async()=>{
     try{
-      const path=location || cfg.resultPath.replace("{ticket}",encodeURIComponent(ticket));
-      const url=/^https?:\/\//i.test(path)?path:apiUrl(path);
-      const r=await fetch(url,{headers:headers()});
+      const path = cfg.resultPath.replace("{ticket}",encodeURIComponent(ticket));
+      const url = apiUrl(path);
+      const r = await fetch(url, {headers:headers()});
       if(r.status===404||r.status===202){$("#runningText").textContent="Assessment is still running. Checking again automatically…";return}
       if(!r.ok)throw new Error(`HTTP ${r.status}`);
       const d=await r.json();
