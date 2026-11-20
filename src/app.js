@@ -1,13 +1,84 @@
+
 const DEFAULTS={apiBase:"https://prefairos.linkeddata.es",startPath:"/assess/algorithm/{algorithm}",resultPath:"/assess/score/{ticket}",pollSeconds:5,token:""};
 let cfg={...DEFAULTS,...JSON.parse(localStorage.getItem("fairos-config")||"{}")};
+const configuredApiBase = window.APP_CONFIG?.API_BASE_URL;
+
+if (configuredApiBase) {
+  cfg.apiBase = configuredApiBase.replace(/\/+$/, "");
+}
 let timer=null,currentResult=null,currentResourceMetadata={};
 
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
+function getDemoClaims() {
+  const identity = $("#demoIdentity").value;
+
+  if (identity === "authenticated") {
+    return {
+      sub: "demo.authenticated"
+    };
+  }
+
+  if (identity === "repository") {
+    return {
+      sub: "demo.repository",
+      entitlements: [
+        "urn:eosc:fairos:repository:role=member#eosc-demo"
+      ]
+    };
+  }
+
+  return {};
+}
 function apiUrl(path){return cfg.apiBase.replace(/\/$/,"")+"/"+path.replace(/^\//,"")}
 function headers(){const h={};if(cfg.token)h["Authorization"]=cfg.token;return h}
 function showError(msg){$("#errorBox").textContent=msg;$("#errorBox").classList.remove("hidden")}
 function clearError(){$("#errorBox").classList.add("hidden")}
+async function readProxyResponse(response) {
+  const text = await response.text();
+  let body;
+
+  try {
+    body = JSON.parse(text);
+  } catch {
+    body = null;
+  }
+
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After");
+    const seconds = Number(retryAfter);
+
+    if (
+      retryAfter !== null &&
+      retryAfter.trim() !== "" &&
+      Number.isFinite(seconds) &&
+      seconds >= 0
+    ) {
+      const retryAt = new Date(Date.now() + seconds * 1000);
+      throw new Error(
+        `Request limit reached. Try again in ${seconds} seconds ` +
+        `(approximately ${retryAt.toLocaleTimeString()}).`
+      );
+    }
+
+    throw new Error("Request limit reached. Please try again later.");
+  }
+
+  if (!response.ok) {
+    const detail = body?.detail;
+    const message = typeof detail === "string"
+      ? detail
+      : JSON.stringify(detail) || text || response.statusText;
+
+    throw new Error(`HTTP ${response.status}: ${message}`);
+  }
+
+  if (!body || typeof body !== "object") {
+    throw new Error("The proxy returned an invalid JSON response.");
+  }
+
+  return body.upstream_response ?? body;
+}
 function switchView(name){$$(".view").forEach(v=>v.classList.remove("active"));$("#"+name+"View").classList.add("active");$$(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===name))}
 $$(".nav-btn").forEach(b=>b.onclick=()=>{switchView(b.dataset.view);if(b.dataset.view==="jobs")renderJobs()});
 
@@ -91,15 +162,36 @@ async function startAssessment(){
 
   $("#startAssessment").disabled=true;
   try{
-    const form=new FormData();
-    form.append("file",file,file.name);
-    const path=cfg.startPath.replace("{algorithm}",encodeURIComponent(algo));
-    const r=await fetch(apiUrl(path),{method:"POST",headers:headers(),body:form});
-    const text=await r.text();let d={};try{d=JSON.parse(text)}catch{}
-    if(r.status!==202)throw new Error(`${r.status}: ${text||r.statusText}`);
-    const ticket=d.ticket_id;
-    if(!ticket)throw new Error("The API returned 202 but no ticket_id was found.");
-    const location=r.headers.get("Location");
+    const form = new FormData();
+    form.append("file", file, file.name);
+    form.append("claims", JSON.stringify(getDemoClaims()));
+
+    const path = cfg.startPath.replace(
+      "{algorithm}",
+      encodeURIComponent(algo)
+    );
+
+    const r = await fetch(apiUrl(path), {
+      method: "POST",
+      headers: headers(),
+      body: form
+    });
+
+    const data = await readProxyResponse(r);
+
+    if (data.mock) {
+      throw new Error(
+        "The proxy returned a mock response. " +
+        "Use MODE=production in the proxy to run a real assessment."
+      );
+    }
+
+    const ticket = data.ticket_id;
+    if (!ticket) {
+      throw new Error("The proxy response does not contain a ticket_id.");
+    }
+
+    const location = null;
     saveJob({ticket,resource:sourceMode==="url"?$("#roUrl").value.trim():file.name,algorithm:algo,status:"RUNNING",created:new Date().toISOString(),location,resourceMetadata:currentResourceMetadata});
     poll(ticket,file.name,algo,location);
   }catch(e){showError("Assessment could not be started. "+e.message)}
@@ -115,8 +207,7 @@ function poll(ticket,resource,algo,location=null){
       const url = apiUrl(path);
       const r = await fetch(url, {headers:headers()});
       if(r.status===404||r.status===202){$("#runningText").textContent="Assessment is still running. Checking again automatically…";return}
-      if(!r.ok)throw new Error(`HTTP ${r.status}`);
-      const d=await r.json();
+      const d = await readProxyResponse(r);
       // Some job APIs return a wrapper before exposing the result.
       const status=String(d.status||d.state||"").toUpperCase();
       if(["PENDING","RUNNING","QUEUED","PROCESSING"].includes(status)){updateJob(ticket,{status:"RUNNING"});return}

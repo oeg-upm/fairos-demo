@@ -29,6 +29,13 @@
       </div>
 
       <div class="card form-card">
+        <label for="demoIdentity">Demo identity</label>
+          <select id="demoIdentity">
+            <option value="anonymous">Anonymous</option>
+            <option value="authenticated">Authenticated — demo.authenticated</option>
+            <option value="repository">Repository — demo.repository</option>
+          </select>
+        <small>Simulated identity for testing service authorization.</small>
         <label>Research Object metadata</label>
         <div class="source-tabs" role="tablist" aria-label="Assessment input">
           <button type="button" class="source-tab active" data-source="file">Upload file</button>
@@ -118,7 +125,7 @@
       <div class="actions"><button id="saveSettings" value="default" class="primary">Save</button></div>
     </form>
   </dialog>
-
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
