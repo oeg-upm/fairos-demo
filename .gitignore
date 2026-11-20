@@ -1,0 +1,6 @@
+ignore
+.venv
+__pycache__
+.env
+.vscode
+.env.locust
